@@ -1,209 +1,137 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>제주 개발사업 인허가 절차 검색 | 2026년 기준</title>
-<style>
-  :root { --bg:#f3f6fa; --card:#fff; --ink:#1b2a41; --sub:#5b6b80; --line:#dfe5ee; --accent:#2563eb; --chip:#eef3fd; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif; line-height:1.6; }
-  .wrap { max-width:880px; margin:0 auto; padding:56px 16px 80px; }
-  .eyebrow { color:var(--accent); font-size:14px; font-weight:600; }
-  h1 { font-size:34px; margin:8px 0 8px; }
-  .lead { color:var(--sub); margin:0 0 24px; }
-  .home { text-align:center; padding-top:8vh; }
-  .home h1 { font-size:30px; }
-  .search { width:100%; padding:16px 18px; font-size:17px; border:1px solid var(--line); border-radius:14px; background:#fff; }
-  .search:focus { outline:2px solid var(--accent); border-color:transparent; }
-  .picks { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px; }
-  .pick { border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:999px; padding:8px 16px; font-size:15px; cursor:pointer; font-family:inherit; }
-  .pick:hover { border-color:var(--accent); color:var(--accent); }
-  .pick small { color:var(--sub); margin-left:6px; font-size:12px; }
-  .msg { color:var(--sub); font-size:14px; margin-top:16px; }
-  .back { display:inline-block; margin-bottom:20px; color:var(--accent); text-decoration:none; font-size:14px; cursor:pointer; background:none; border:none; padding:0; font-family:inherit; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:28px; }
-  .card h2 { margin:0 0 4px; font-size:26px; }
-  .tag { display:inline-block; font-size:12px; background:var(--chip); color:var(--accent); padding:2px 8px; border-radius:6px; margin-bottom:8px; }
-  .summary { color:var(--sub); margin:4px 0 14px; }
-  .jeju { font-size:13px; background:#fff8e6; border:1px solid #f3e2b3; border-radius:8px; padding:8px 12px; margin-bottom:20px; }
-  ol.steps { list-style:none; padding:0; margin:0; counter-reset:s; }
-  ol.steps li { position:relative; padding:0 0 20px 44px; counter-increment:s; }
-  ol.steps li::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; }
-  ol.steps li:not(:last-child)::after { content:""; position:absolute; left:13px; top:30px; bottom:2px; width:2px; background:var(--line); }
-  .st { font-weight:700; }
-  .sd { color:var(--sub); font-size:14px; }
-  .law { display:inline-block; font-size:12px; border:1px solid var(--line); border-radius:6px; padding:1px 7px; margin:4px 4px 0 0; }
-  .notes { font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px; margin-top:4px; }
-  .foot { color:var(--sub); font-size:12px; margin-top:28px; text-align:center; }
-  .wrap.wide { max-width:1180px; }
-  .meta { display:flex; flex-wrap:wrap; gap:8px 20px; font-size:13px; color:var(--sub); margin:0 0 12px; }
-  .meta b { color:var(--ink); }
-  .check { border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:14px; }
-  .check .st { font-size:14px; }
-  .tbl-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:12px; }
-  table.sch { border-collapse:collapse; width:100%; min-width:860px; font-size:13px; table-layout:fixed; }
-  .sch thead th:nth-child(1) { width:40px; } .sch thead th:nth-child(2) { width:100px; }
-  .sch th, .sch td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:8px 10px; vertical-align:top; text-align:left; }
-  .sch th:last-child, .sch td:last-child { border-right:none; }
-  .sch thead th { background:#f7f9fc; font-weight:700; position:sticky; top:0; }
-  .sch .ph { background:#f7f9fc; font-weight:700; writing-mode:vertical-rl; text-align:center; width:34px; letter-spacing:2px; }
-  .sch .t { white-space:nowrap; font-weight:600; width:92px; }
-  .sch td.on { background:var(--chip); color:var(--ink); }
-  .sch td.on.dup { background:#eef3fd; } .sch td.on.dev { background:#ecf8f0; }
-  .sch td.on.env { background:#fff6e5; } .sch td.on.etc { background:#f4effd; }
-  .tlaws { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin:16px 0; }
-  .tlaws > div { border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:13px; }
-  .q { font-weight:700; font-size:17px; margin:8px 0 10px; }
-  .vpicks { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
-  .vpick { border:1px solid var(--line); border-radius:12px; padding:8px 14px; text-decoration:none; color:var(--ink); background:#fff; display:flex; flex-direction:column; font-size:15px; }
-  .vpick small { color:var(--sub); font-size:12px; }
-  .vpick:hover, .vpick.sel { border-color:var(--accent); color:var(--accent); background:var(--chip); }
-  .vhead { border-top:1px solid var(--line); padding-top:14px; margin-bottom:14px; }
-  .tip { font-size:13px; background:#eef6ff; border:1px solid #cfe0fb; border-radius:8px; padding:8px 12px; margin-bottom:16px; }
-  .toggles { display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; font-size:14px; margin-bottom:12px; }
-  .toggles b { margin-right:4px; }
-  .toggles label { cursor:pointer; }
-  .sch td.on.dis { background:#fdecec; } .sch td.on.land { background:#f4effd; } .sch td.on.trf { background:#eaf7f7; }
-  @media (max-width:600px){ h1{font-size:24px;} .card{padding:20px;} }
-</style>
-</head>
-<body>
-<div class="wrap" id="app"></div>
-<p class="foot">기준일 <span id="updated"></span> · 근거 조문은 국가법령정보센터에서 최신 개정 여부를 확인하세요.</p>
+const UPDATED = "2026-11-03";
 
-<script src="data.js"></script>
-<script>
-  const app = document.getElementById("app");
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-
-  if (typeof PERMITS === "undefined") {
-    app.innerHTML = '<div class="card">data.js를 불러오지 못했습니다. 저장소에 data.js가 index.html과 같은 위치에 있는지 확인하세요.</div>';
-  } else {
-    document.getElementById("updated").textContent = UPDATED;
-
-    const find = q => {
-      const k = q.trim().toLowerCase().replace(/\s/g, "");
-      if (!k) return [];
-      const norm = s => s.toLowerCase().replace(/\s/g, "");
-      return PERMITS.filter(p => [p.name, ...(p.keywords||[])].some(w => norm(w).includes(k) || k.includes(norm(w))));
-    };
-
-    const home = (q = "", msg = "") => {
-      app.classList.remove("wide");
-      app.innerHTML = `
-        <div class="home">
-          <div class="eyebrow">도시계획 실무지원</div>
-          <h1>어떤 사업을 검토하시나요?</h1>
-          <p class="lead">사업유형을 입력하거나 아래에서 선택하세요.</p>
-          <input id="q" class="search" type="search" placeholder="예: 관광농원, 지구단위계획, 관광휴양형" autocomplete="off" value="${esc(q)}">
-          <div class="msg" id="msg">${msg}</div>
-          <div class="picks" id="picks"></div>
-        </div>`;
-      const $q = document.getElementById("q");
-      const $picks = document.getElementById("picks");
-      const $msg = document.getElementById("msg");
-      const drawPicks = list => {
-        $picks.innerHTML = list.map(p => `<button class="pick" data-id="${p.id}">${esc(p.name)}<small>${esc(p.category)}</small></button>`).join("");
-      };
-      drawPicks(PERMITS);
-      $q.addEventListener("input", () => {
-        const hits = find($q.value);
-        if (!$q.value.trim()) { $msg.textContent = ""; drawPicks(PERMITS); return; }
-        $msg.textContent = hits.length ? `${hits.length}개 사업유형이 있습니다. Enter를 누르거나 선택하세요.` : "해당 사업유형이 아직 등록되지 않았습니다.";
-        drawPicks(hits.length ? hits : []);
-      });
-      $q.addEventListener("keydown", e => {
-        if (e.key !== "Enter") return;
-        const hits = find($q.value);
-        if (hits.length) location.hash = hits[0].id;
-      });
-      $picks.addEventListener("click", e => {
-        const b = e.target.closest(".pick");
-        if (b) location.hash = b.dataset.id;
-      });
-      $q.focus();
-    };
-
-    const lawTags = laws => (laws||[]).map(l => `<span class="law">${esc(l)}</span>`).join("");
-
-    const scheduleView = (s, on) => {
-      const tracks = s.tracks.filter(t => on[t.id] !== false);
-      const head = `<tr><th>단계</th><th>개략 기간</th>${tracks.map(t => `<th>${esc(t.name)}</th>`).join("")}</tr>`;
-      const body = s.phases.map(ph => {
-        const rows = ph.rows.filter(r => tracks.some(t => r.c[t.id]));
-        return rows.map((r, i) => `
-        <tr>
-          ${i === 0 ? `<td class="ph" rowspan="${rows.length}">${esc(ph.name)}</td>` : ""}
-          <td class="t">${esc(r.t)}</td>
-          ${tracks.map(t => r.c[t.id] ? `<td class="on ${t.id}">${esc(r.c[t.id])}</td>` : "<td></td>").join("")}
-        </tr>`).join("");
-      }).join("");
-      const opts = s.tracks.filter(t => t.optional);
-      return `
-        ${opts.length ? `<div class="toggles"><b>해당 영향평가</b>${opts.map(t => `<label><input type="checkbox" data-t="${t.id}" ${on[t.id] !== false ? "checked" : ""}> ${esc(t.name)}</label>`).join("")}</div>` : ""}
-        <div class="meta"><span><b>기준</b> ${esc(s.base)}</span>${s.total ? `<span><b>총 소요</b> ${esc(s.total)}</span>` : ""}</div>
-        <div class="tbl-wrap"><table class="sch"><thead>${head}</thead><tbody>${body}</tbody></table></div>
-        <div class="tlaws">${tracks.map(t => `<div><div class="st">${esc(t.name)} 근거</div>${lawTags(t.laws)}</div>`).join("")}</div>`;
-    };
-
-    const stepsView = steps => `
-      <ol class="steps">
-        ${(steps||[]).map(s => `
-          <li>
-            <div class="st">${esc(s.title)}</div>
-            ${s.desc ? `<div class="sd">${esc(s.desc)}</div>` : ""}
-            ${lawTags(s.laws)}
-          </li>`).join("")}
-      </ol>`;
-
-    const mountBody = (el, x) => {
-      const on = {};
-      if (x.schedule) x.schedule.tracks.forEach(t => { if (t.off) on[t.id] = false; });
-      const draw = () => {
-        el.innerHTML = `${x.tip ? `<div class="tip">${esc(x.tip)}</div>` : ""}${x.schedule ? scheduleView(x.schedule, on) : ""}${stepsView(x.steps)}`;
-        el.querySelectorAll("input[data-t]").forEach(cb => cb.onchange = () => { on[cb.dataset.t] = cb.checked; draw(); });
-      };
-      draw();
-    };
-
-    const detail = (p, vid) => {
-      const v = p.variants ? p.variants.find(x => x.id === vid) : null;
-      const wide = !!(p.schedule || (v && v.schedule));
-      app.classList.toggle("wide", wide);
-      app.innerHTML = `
-        <button class="back" id="back">← 다른 사업 검토하기</button>
-        <article class="card">
-          <span class="tag">${esc(p.category)}</span>
-          <h2>${esc(p.name)}</h2>
-          <p class="summary">${esc(p.summary)}</p>
-          ${p.jejuNote ? `<div class="jeju">제주 특례 · ${esc(p.jejuNote)}</div>` : ""}
-          ${(p.checks||[]).map(c => `<div class="check"><div class="st">사전 확인 · ${esc(c.title)}</div><div class="sd">${esc(c.desc)}</div>${lawTags(c.laws)}</div>`).join("")}
-          ${p.variants ? `
-            <div class="q">${esc(p.question || "어떤 경우인가요?")}</div>
-            <div class="vpicks">${p.variants.map(x => `<a class="vpick ${v && v.id === x.id ? "sel" : ""}" href="#${p.id}/${x.id}">${esc(x.label)}<small>${esc(x.tier)}</small></a>`).join("")}</div>
-            ${v ? `<div class="vhead"><span class="tag">${esc(v.tier)}</span> <b>${esc(v.label)}</b><div class="sd">${esc(v.summary || "")}</div></div>` : ""}` : ""}
-          <div id="body"></div>
-          ${(p.notes||[]).length ? `<div class="notes">${p.notes.map(esc).join("<br>")}</div>` : ""}
-        </article>`;
-      if (v) mountBody(document.getElementById("body"), v);
-      else if (!p.variants) mountBody(document.getElementById("body"), p);
-      document.getElementById("back").onclick = () => { location.hash = ""; };
-      if (!vid) window.scrollTo(0, 0);
-    };
-
-    const route = () => {
-      const [id, vid] = decodeURIComponent(location.hash.slice(1)).split("/");
-      const p = PERMITS.find(x => x.id === id);
-      if (p) return detail(p, vid);
-      const q = new URLSearchParams(location.search).get("q") || "";
-      if (q) { const hits = find(q); if (hits.length === 1) { location.hash = hits[0].id; return; } }
-      home(q);
-      if (q) document.getElementById("q").dispatchEvent(new Event("input"));
-    };
-    window.addEventListener("hashchange", route);
-    route();
+const PERMITS = [
+  {
+    id: "rural-resort",
+    name: "농어촌관광휴양단지",
+    category: "농어촌정비법",
+    keywords: ["관광휴양단지","휴양단지","농어촌관광","농어촌정비법"],
+    summary: "도지사가 단지를 지정한 뒤 사업계획 승인을 받아 개발하는 방식입니다.",
+    jejuNote: "제주특별자치도는 법문상 '시장·군수·구청장'이 특별자치도지사입니다(농어촌정비법 제2조제12호 괄호).",
+    steps: [
+      {"title":"단지 지정 전 심의","desc":"사업계획 개요와 주요 내용에 대해 시·군·구 농업·농촌및식품산업정책심의회(어촌은 수산업·어촌정책심의회) 심의","laws":["농어촌정비법 시행령 제71조제1항"]},
+      {"title":"농어촌관광휴양단지 지정·고시","desc":"지정 후 명칭·위치·규모, 사업시행자, 사업기간, 사업비 등을 고시","laws":["농어촌정비법 제82조제1항·제3항","같은 법 시행령 제73조"]},
+      {"title":"사업계획 승인 신청","desc":"명칭·위치·규모, 조성계획, 토지명세서, 조감도, 사업비 조달계획, 분양·운영계획 등을 담은 사업계획서 제출","laws":["농어촌정비법 제82조제2항","같은 법 시행령 제72조제1항"]},
+      {"title":"관계기관 협의(인허가 의제)","desc":"건축허가, 개발행위허가, 농지전용, 산지전용 등 의제 대상은 사전 협의. 관계기관은 30일 이내 의견 제출(10일 범위 연장 가능)","laws":["농어촌정비법 제106조제2항·제4항·제5항"]},
+      {"title":"사업계획 승인·고시","desc":"승인 후 고시. 사업시행자 명의, 구역 경계·면적, 시행기간 등을 바꿀 때는 변경승인 필요","laws":["농어촌정비법 제82조제2항·제3항","같은 법 시행령 제72조제2항"]},
+      {"title":"공사 및 준공인가","desc":"준공인가 신청 → 준공검사 → 준공인가·고시. 의제된 인허가의 준공검사도 받은 것으로 봄","laws":["농어촌정비법 제114조"]},
+      {"title":"농어촌관광휴양지사업자 신고","desc":"운영계획서, 영업시설 평면도 등을 첨부해 신고. 숙박업·식품접객업 등 일부 신고는 협의를 거치면 의제","laws":["농어촌정비법 제85조","같은 법 제106조제3항","같은 법 시행규칙 제48조"]}
+    ],
+    notes: [
+      "사업 규모 및 시설기준: 농어촌정비법 시행규칙 제47조 별표 3 (별표 내용 확인 후 기재 필요)"
+    ]
+  },
+  {
+    id: "tourist-farm",
+    name: "관광농원",
+    category: "농어촌정비법",
+    keywords: ["관광농원","농원","농어촌정비법","체험농장"],
+    summary: "단지 지정 없이 농어업인 등이 사업계획 승인을 받아 개발합니다.",
+    jejuNote: "제주특별자치도는 법문상 '시장·군수·구청장'이 특별자치도지사입니다(농어촌정비법 제2조제12호 괄호).",
+    steps: [
+      {"title":"사업주체 요건 확인","desc":"농업인, 어업인, 한국농어촌공사, 농협·산림조합·수협(어촌계), 농업법인·어업법인만 개발 가능","laws":["농어촌정비법 제83조제1항","같은 법 시행령 제74조"]},
+      {"title":"사업계획 승인 신청","desc":"명칭·위치·규모, 조성계획, 토지명세서, 조감도, 사업비 조달계획, 분양·운영계획 등을 담은 사업계획서 제출","laws":["농어촌정비법 제83조제2항","같은 법 시행령 제72조제1항"]},
+      {"title":"관계기관 협의(인허가 의제)","desc":"건축허가, 개발행위허가, 농지전용, 산지전용 등 의제 대상은 사전 협의. 관계기관은 30일 이내 의견 제출(10일 범위 연장 가능)","laws":["농어촌정비법 제106조제2항·제4항·제5항"]},
+      {"title":"사업계획 승인","desc":"중요사항 변경 시 변경승인 필요","laws":["농어촌정비법 제83조제2항","같은 법 시행령 제72조제2항"]},
+      {"title":"공사 및 준공인가","desc":"준공인가 신청 → 준공검사 → 준공인가·고시","laws":["농어촌정비법 제114조"]},
+      {"title":"농어촌관광휴양지사업자 신고","desc":"관광농원사업은 제83조제1항의 자 중 신고한 자만 경영 가능","laws":["농어촌정비법 제85조제1항·제2항","같은 법 시행규칙 제48조"]}
+    ],
+    notes: [
+      "사업 규모 및 시설기준: 농어촌정비법 시행규칙 제47조 별표 3 (별표 내용 확인 후 기재 필요)"
+    ]
+  },
+  {
+    id: "tourism-dup",
+    name: "관광휴양형 지구단위계획",
+    category: "국토계획법 · 제주특별법",
+    keywords: ["지구단위계획","지단","관광휴양형","관광휴양형지단","관광·휴양개발진흥지구","개발진흥지구","개발사업시행승인"],
+    summary: "도시지역 외 관광개발사업을 제주특별법상 개발사업시행승인으로 추진하면서 지구단위계획을 함께 결정(의제)하는 절차입니다.",
+    jejuNote: "관광개발사업은 개발사업시행승인 시 지구단위계획 결정, 계획관리지역 지정, 개발진흥지구 지정까지 의제됩니다(제주특별법 제148조제1항제8호). 환경영향평가 협의내용은 도의회 동의 대상입니다(제주특별자치도 환경영향평가 조례 제13조제1항).",
+    checks: [
+      {"title":"구역 지정 요건","desc":"면적 3만㎡ 이상, 계획관리지역 50% 이상(보전관리지역 포함 한도) 또는 관광·휴양개발진흥지구(도시지역 외, 농림·자연환경보전지역 제외). 곶자왈 보호지역, 지하수·경관보전지구 1·2등급, 고시된 중산간 보호지역 제외","laws":["국토계획법 제51조제3항","같은 법 시행령 제44조","제주 도시계획 조례 제14조"]}
+    ],
+    schedule: {
+      base: "D = 개발사업시행승인 사전검토 사업계획서 제출",
+      total: "약 30개월",
+      tracks: [
+        {"id":"dup","name":"지구단위계획","laws":["국토계획법 제26조·제30조제3항","같은 법 시행령 제20조","제주 도시계획 조례 제4조"]},
+        {"id":"dev","name":"개발사업시행승인","laws":["제주특별법 제147조·제148조","제주 개발사업시행 승인 조례 제9조·제14조","사전검토 절차 근거 (조문 미확인)"]},
+        {"id":"env","name":"환경영향평가","laws":["환경영향평가법 제9조(전략)·제22조(본안)","제주특별법 제364조","제주 환경영향평가 조례 제13조"]},
+        {"id":"etc","name":"경관·교통·재해","laws":["경관 심의 근거 (조문 미확인)","교통영향평가 근거 (조문 미확인)","재해영향평가: 자연재해대책법 제4조"]}
+      ],
+      phases: [
+        { name: "사전검토 단계", rows: [
+          {"t":"D","c":{"dev":"사전검토 사업계획서 제출, 입안여부 자문 관련부서 협의"}},
+          {"t":"D+2개월","c":{"dup":"입안여부 도시계획위원회 자문"}},
+          {"t":"D+3개월","c":{"dup":"자문결과 통보 및 조치계획서 작성","env":"전략환경영향평가 준비서 작성·접수"}},
+          {"t":"D+4개월","c":{"env":"평가준비서 평가협의회 심의"}},
+          {"t":"D+5개월","c":{"env":"전략환경영향평가서 초안 작성·제출"}},
+          {"t":"D+6개월","c":{"env":"초안 공고·공람, 주민설명회·공청회"}},
+          {"t":"D+7~8개월","c":{"dev":"평가지표 협의 및 관련부서 의견수렴","env":"주민설명회 자문단 현장방문, 초안 의견서 제출"}},
+          {"t":"D+9~10개월","c":{"env":"전략환경영향평가서 본안 작성·제출, 검토보완"}},
+          {"t":"D+11개월","c":{"env":"협의결과 통보 및 자문회의"}},
+          {"t":"D+12개월","c":{"dev":"평가지표 협의 조치계획서 제출 (사업시행자 → 도 관광산업과)","env":"자문 보완서 작성, 전략환경영향평가 협의 완료"}},
+          {"t":"D+13개월","c":{"dev":"사전검토 결과 통보 (도 관광산업과 → 사업시행자)"}}
+        ] },
+        { name: "개발사업시행승인 단계", rows: [
+          {"t":"D+14개월","c":{"dev":"시행승인 관련 서류 제출, 도보·누리집 공람공고(20일 이상), 관계기관·전문가·주민 설명회","env":"환경영향평가 준비서 접수 (관광산업과 → 환경정책과)"}},
+          {"t":"D+15개월","c":{"dev":"관련부서·기관 협의의견 조치계획 제출","env":"평가협의회 심의"}},
+          {"t":"D+16개월","c":{"etc":"경관위원회 심의 (도 건축경관과)"}},
+          {"t":"D+17개월","c":{"etc":"경관 심의결과 보고 / 재해영향평가 검토서 작성 및 사전협의 (국립재난안전연구원)"}},
+          {"t":"D+18개월","c":{"env":"계절조사","etc":"교통영향평가 보고서 작성·접수 / 재해 사전협의 결과보고서 접수"}},
+          {"t":"D+19개월","c":{"etc":"교통 사전검토 의견수렴·보완서 협의 / 재해 심의위원 검토의견 조치계획"}},
+          {"t":"D+20개월","c":{"etc":"교통영향평가 심의위원회 심의 / 재해영향평가 소집회의 및 조치계획서"}},
+          {"t":"D+21개월","c":{"dup":"도시건축공동위원회 심의자료 작성","etc":"교통 심의보완서 제출(협의 완료) / 재해영향평가 최종보고서 제출"}},
+          {"t":"D+22개월","c":{"dup":"도시건축공동위원회 심의"}},
+          {"t":"D+23개월","c":{"dup":"심의결과 조치계획서 제출","env":"환경영향평가서(본안) 작성·제출"}},
+          {"t":"D+24~25개월","c":{"env":"본안 전문기관·관련부서 협의, 검토보완"}},
+          {"t":"D+26개월","c":{"env":"환경영향평가심의위원회 심의, 도의회 동의 신청"}},
+          {"t":"D+28개월","c":{"env":"도의회 동의, 협의내용 통보 (환경정책과)"}},
+          {"t":"D+29개월","c":{"dev":"개발사업시행승인 신청 (의제서류 포함)"}},
+          {"t":"D+30개월","c":{"dev":"개발사업시행승인 고시 → 지구단위계획 결정 등 의제"}}
+        ] }
+      ]
+    },
+    notes: [
+      "기간은 더시에나 일정표(2026.9.22.)에서 도시계획시설 폐지 단계를 뺀 뒤 사전검토 착수 시점을 D로 다시 맞춘 값입니다. 협의·심의 결과에 따라 달라집니다.",
+      "승인 후 1년 내 착수(1회 1년 연장 가능), 미착수 시 승인 실효(제주특별법 제147조제7항·제8항). 주민 제안 지구단위계획은 고시 후 5년 내 미착수 시 실효(국토계획법 제53조제2항).",
+      "법적 근거 확인 기준일 2026-11-03. 국토계획법 2026.12.17. 시행 개정, 제주특별법 2026.11.13.·12.3. 등 시행 예정 개정이 있어 해당 조문 재확인이 필요합니다."
+    ]
+  },
+  {
+    id: "dev-change",
+    name: "개발사업시행승인 변경",
+    category: "제주특별법",
+    keywords: ["변경","변경승인","개발사업시행승인 변경","사업기간 연장","기간연장","시행자 변경","명칭변경","면적변경","재협의"],
+    summary: "제주특별법 제147조에 따라 승인받은 개발사업의 내용을 변경하는 절차입니다. 변경 내용에 따라 경미한 변경, 일반 변경, 영향평가 재협의 수반 변경으로 나뉩니다.",
+    jejuNote: "기존 개발사업 내용 변경 시 시행승인 절차(제147조제1항~제6항·제9항)를 준용하며, 도조례로 정하는 경미한 사항은 예외입니다(제주특별법 제147조제10항).",
+    question: "무엇을 변경하나요?",
+    variants: [
+      {"id":"minor","label":"경미한 사항 변경 (투자비·대표자 변경 등)","tier":"① 경미한 변경","summary":"조례 제19조제1항 각 호에 해당하면 변경승인 대신 변경신고로 처리합니다. 둘 이상 변경 시 요건을 모두 충족해야 합니다.","steps":[{"title":"경미한 사항 해당 여부 확인","desc":"① 지적조사·측량에 따른 면적 증감 ② 부지면적 10% 이내 또는 1만㎡ 이내 증감 ③ 전체 연면적 합계(누적) 10% 이내 변경(용도변경 포함) ④ 건축법 제16조제2항 등에 따른 변경 ⑤ 도로·용수 등 기반시설 30% 이내 변경 ⑥ 사업규모·내용 변경 없는 투자비 변경, 사업시행자 대표자 변경 ⑦ 의제 법령상 경미한 변경","laws":["제주특별법 제147조제10항 단서","개발사업시행 승인 조례 제19조제1항"]},{"title":"사업계획 변경신고","desc":"변경예정일 15일 전까지 변경신고서 제출. 건축법 제16조제2항 변경은 사용승인 신청 시 일괄 신고로 갈음 가능","laws":["개발사업시행 승인 조례 제19조제4항"]},{"title":"(해당 시) 고시","desc":"의제 법령상 고시로 효력이 생기는 경미한 변경은 시행승인 고시 규정을 준용해 고시","laws":["개발사업시행 승인 조례 제19조제3항·제20조"]}],"tip":"변경예정일 15일 전까지 별지 제6호서식 사업계획 변경신고서를 제출합니다(조례 제19조제4항)."},
+      {"id":"period","label":"사업기간 연장","tier":"② 일반 변경 (영향평가 없음)","summary":"영향평가 재협의 없이 변경승인 절차만 거칩니다.","tip":"변경신청서는 사업기간 만료 90일 전까지 제출해야 하며, 도지사는 특별한 사유가 없으면 만료 전에 승인·고시합니다(조례 제14조제6항).","steps":[{"title":"변경신청서 제출","desc":"별지 제4의2호서식 변경신청서 제출. 사업기간 만료 90일 전까지","laws":["개발사업시행 승인 조례 제14조제1항·제6항"]},{"title":"공람·의견청취","desc":"도보·누리집 20일 이상 공고. 시설계획면적 20% 이내, 시설지구별 토지이용계획면적·건축연면적 30% 이내 변경 등은 의견청취 생략 가능","laws":["개발사업시행 승인 조례 제14조제2항·제5항","같은 조례 제20조제2항"]},{"title":"관련부서 협의","desc":"의제 인허가 사항이 바뀌면 관계기관 협의(30일 이내 의견, 미제출 시 협의 간주)","laws":["제주특별법 제148조제2항·제3항"]},{"title":"개발사업심의위원회 심의 (해당 시)","desc":"30만㎡ 이상 관광개발사업은 사업기간 및 사업계획 변경의 적정성 심의","laws":["개발사업시행 승인 조례 제9조제1항제4호·제2항"]},{"title":"변경승인 및 고시","desc":"사업기간 만료 전 승인·고시","laws":["제주특별법 제147조제10항·제13항","개발사업시행 승인 조례 제14조제6항"]}]},
+      {"id":"operator","label":"사업시행자 변경 (명칭·명의)","tier":"② 일반 변경 (영향평가 없음)","summary":"영향평가 재협의 없이 변경승인 절차만 거칩니다. 시행자는 그대로이고 대표자만 바뀌는 경우는 ① 경미한 변경(조례 제19조제1항제6호)입니다.","steps":[{"title":"변경신청서 제출","desc":"별지 제4의2호서식 변경신청서와 변경 사실 증빙서류 제출","laws":["개발사업시행 승인 조례 제14조제1항"]},{"title":"공람·의견청취","desc":"도보·누리집 20일 이상 공고. 조례 제20조제2항 각 호 해당 변경은 의견청취 생략 가능","laws":["개발사업시행 승인 조례 제14조제2항·제5항"]},{"title":"개발사업심의위원회 심의 (해당 시)","desc":"30만㎡ 이상 관광개발사업으로서 사업시행자 투자적격 등 검토가 필요한 경우","laws":["개발사업시행 승인 조례 제9조"]},{"title":"변경승인 및 고시","desc":"변경 내용 고시","laws":["제주특별법 제147조제10항·제13항"]}]},
+      {"id":"plan","label":"면적·시설 규모·배치 변경","tier":"③ 영향평가 재협의 수반 변경","summary":"변경 내용이 영향평가 재협의·변경협의 대상이면 각 평가를 다시 거칩니다. 해당하는 평가를 체크하면 일정표가 바뀝니다.","tip":"환경영향평가: 면적 일정 규모 이상 증가, 보전지역 개발 등은 재협의(환경영향평가법 제32조), 그 외 변경은 환경보전방안 마련·검토(같은 법 제33조). 재해영향평가: 부지 경계·토지이용계획이 바뀌면 협의를 다시 거칩니다(자연재해대책법 제4조제2항 반대해석, 세부 기준은 시행령 확인 필요).","schedule":{"base":"D = 변경신청 서류 작성 착수","total":"약 10개월 (환경·재해·경관 모두 해당 시)","tracks":[{"id":"dev","name":"개발사업시행승인","laws":["제주특별법 제147조제10항·제13항","제주특별법 제148조","개발사업시행 승인 조례 제14조"]},{"id":"env","name":"환경영향평가","optional":true,"laws":["환경영향평가법 제32조(재협의)·제33조(변경협의)","제주특별법 제364조","제주 환경영향평가 조례"]},{"id":"dis","name":"재해영향평가","optional":true,"laws":["자연재해대책법 제4조"]},{"id":"land","name":"경관심의","optional":true,"laws":["경관 심의 근거 (조문 미확인)"]},{"id":"trf","name":"교통영향평가","optional":true,"off":true,"laws":["교통영향평가 근거 (조문 미확인)"]}],"phases":[{"name":"변경 준비","rows":[{"t":"D+1개월","c":{"dev":"변경 관련서류 및 개별법 계획 변경신청서 작성 (예: 휴양림 조성계획)"}},{"t":"D+2개월","c":{"dev":"변경신청서 접수, 관계기관·전문가·주민 의견수렴 및 공람공고(20일 이상)"}},{"t":"D+3개월","c":{"dev":"협의의견 조치계획 제출, 관련서류 보완 (사업시행자 → 소관부서)"}}]},{"name":"영향평가","rows":[{"t":"D+4개월","c":{"land":"경관위원회 심의 (소관부서 → 도 건축경관과)"}},{"t":"D+5개월","c":{"land":"경관 심의결과 조치결과 보고","dis":"재해영향평가 검토서 작성, 국립재난안전연구원 사전검토"}},{"t":"D+6개월","c":{"env":"소규모환경영향평가서 작성","dis":"사전검토 조치계획 작성, 서면심의 접수"}},{"t":"D+7개월","c":{"env":"소규모환경영향평가 협의 요청·협의내용 통보, 반영결과 통보","dis":"서면심의 조치계획 제출, 재해영향평가 심의위원회 소집회의"}},{"t":"D+8개월","c":{"dis":"소집심의 의견 조치계획 작성·완료"}},{"t":"(해당 시)","c":{"trf":"교통영향평가 변경 협의·심의 (기간은 사례 확인 필요)"}}]},{"name":"변경승인","rows":[{"t":"D+9개월","c":{"dev":"개발사업시행 변경승인 신청 (인허가 의제서류 포함)"}},{"t":"D+10개월","c":{"dev":"관련실과 협의 → 변경승인 및 개별법 계획 변경 고시 (도지사)"}}]}]}}
+    ],
+    notes: [
+      "③의 기간은 자연휴양림 개발사업시행승인 변경 사례 일정표 기준입니다. 소관부서는 사업에 따라 다릅니다(예: 관광개발은 관광산업과, 휴양림은 산림녹지과).",
+      "법적 근거 확인 기준일 2026-11-03. 경관심의·교통영향평가 근거와 재해영향평가 재협의 세부 기준(시행령)은 추가 확인이 필요합니다."
+    ]
+  },
+  {
+    id: "housing-dev",
+    name: "대규모 개발행위허가 주택건설사업",
+    category: "주택법 · 국토계획법",
+    keywords: ["주택건설사업","주택","사업계획승인","개발행위허가","대규모 개발행위","공동주택","아파트"],
+    summary: "개발행위허가(도시계획위원회 심의)와 건축계획 심의를 거쳐 주택법상 사업계획승인을 받는 절차입니다. 환경평가 유형에 따라 일정이 달라집니다.",
+    jejuNote: "사업계획승인 시 개발행위허가, 농지·산지전용 등이 의제됩니다(주택법 제19조제1항). 환경영향평가 대상이면 협의내용에 도의회 동의가 필요합니다(제주 환경영향평가 조례 제13조제1항).",
+    question: "어떤 환경평가 대상인가요?",
+    variants: [
+      {"id":"small","label":"소규모환경영향평가 대상","tier":"약 10개월","summary":"재해영향평가와 소규모환경영향평가를 병행한 뒤 도시계획위원회·건축계획 심의를 거칩니다.","schedule":{"base":"D = 토목·건축 기본설계 완료","total":"약 10개월","tracks":[{"id":"dev","name":"개발행위허가·사업계획승인","laws":["주택법 제15조(사업계획승인)·제19조(인허가 의제)","국토계획법 제56조(개발행위허가)·제59조(도시계획위원회 심의)","제주 건축계획심의 조례 (조문 미확인)"]},{"id":"dis","name":"재해영향평가","laws":["자연재해대책법 제4조"]},{"id":"env","name":"소규모환경영향평가","laws":["환경영향평가법 제43조","제주특별법 제364조제7항"]}],"phases":[{"name":"영향평가","rows":[{"t":"D","c":{"dev":"토목·건축 기본설계 완료"}},{"t":"D+1개월","c":{"dis":"재해영향평가서 작성 및 접수","env":"현황조사 및 분석"}},{"t":"D+2개월","c":{"dis":"재해영향평가서 심의위원 의견수렴","env":"평가준비서 작성 및 접수 (도 환경정책과)"}},{"t":"D+3개월","c":{"dis":"조치계획서 작성 및 접수","env":"소규모환경영향평가 협의내용 통보"}},{"t":"D+4개월","c":{"dev":"개발행위허가 사업계획서 접수","dis":"재해영향평가 협의 완료","env":"소규모환경영향평가 협의 완료"}}]},{"name":"심의·승인","rows":[{"t":"D+5개월","c":{"dev":"관련실과 협의 및 조치계획서 제출 (도시계획위원회 심의 신청)"}},{"t":"D+6개월","c":{"dev":"도시계획위원회 심의"}},{"t":"D+7개월","c":{"dev":"건축계획 심의"}},{"t":"D+8개월","c":{"dev":"주택건설사업 사업계획승인 접수"}},{"t":"D+10개월","c":{"dev":"주택건설사업 사업계획승인 완료"}}]}]}},
+      {"id":"eia","label":"환경영향평가 대상","tier":"약 15개월","summary":"도시계획위원회·건축계획 심의는 환경영향평가와 병행하고, 도의회 동의 후 사업계획승인을 신청합니다.","tip":"국토계획법 제59조제2항제4호는 환경영향평가를 받은 개발행위를 도시계획위원회 심의 대상에서 제외합니다. 이 일정은 환경영향평가 협의 완료 전에 심의를 받는 구조이므로, 심의 생략 가능 여부는 담당부서와 확인이 필요합니다.","schedule":{"base":"D = 토목·건축 기본설계 완료","total":"약 15개월","tracks":[{"id":"dev","name":"개발행위허가·사업계획승인","laws":["주택법 제15조(사업계획승인)·제19조(인허가 의제)","국토계획법 제56조(개발행위허가)·제59조(도시계획위원회 심의)","제주 건축계획심의 조례 (조문 미확인)"]},{"id":"dis","name":"재해영향평가","laws":["자연재해대책법 제4조"]},{"id":"env","name":"환경영향평가","laws":["환경영향평가법 제22조","제주특별법 제364조","제주 환경영향평가 조례 제13조"]}],"phases":[{"name":"영향평가·심의","rows":[{"t":"D","c":{"dev":"토목·건축 기본설계 완료"}},{"t":"D+1개월","c":{"dis":"재해영향평가서 작성 및 접수","env":"평가준비서 작성 및 접수"}},{"t":"D+2개월","c":{"dis":"재해영향평가서 심의위원 의견수렴","env":"환경영향평가협의회 심의 (스코핑)"}},{"t":"D+3개월","c":{"dis":"조치계획서 작성 및 접수","env":"계절조사"}},{"t":"D+4개월","c":{"dev":"개발행위허가 사업계획서 접수","dis":"재해영향평가 협의 완료","env":"계절조사"}},{"t":"D+5개월","c":{"dev":"관련실과 협의 및 조치계획서 제출 (도시계획위원회 심의 신청)","env":"환경영향평가 초안 작성·제출"}},{"t":"D+6개월","c":{"dev":"도시계획위원회 심의","env":"주민의견 수렴 (공고·공람 및 주민설명회)"}},{"t":"D+7개월","c":{"dev":"건축계획 심의","env":"평가서(본안) 작성 및 제출"}},{"t":"D+8개월","c":{"env":"평가서(본안) 전문기관 및 관련부서 협의"}},{"t":"D+9개월","c":{"env":"환경영향평가 검토 보완서 심의"}},{"t":"D+11개월","c":{"env":"환경영향평가서 심의결과 보완서 제출"}},{"t":"D+12개월","c":{"env":"제주특별자치도의회 동의"}}]},{"name":"사업계획승인","rows":[{"t":"D+13개월","c":{"dev":"주택건설사업 사업계획승인 접수"}},{"t":"D+15개월","c":{"dev":"주택건설사업 사업계획승인 완료"}}]}]}}
+    ],
+    notes: [
+      "기간은 팀 일정표 사례 기준이며 관련부서 협의, 위원회 심의결과에 따라 달라집니다.",
+      "법적 근거 확인 기준일 2026-11-03. 주택법은 2027.3.9. 시행 개정이 예정되어 있어 시행 후 제15조·제19조 재확인이 필요합니다. 건축계획심의 근거 조문은 추가 확인이 필요합니다."
+    ]
   }
-</script>
-</body>
-</html>
+];
