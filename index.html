@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>제주 개발사업 인허가 절차 검색 | 2026년 기준</title>
+<style>@font-face { font-family:"KoPubDotum"; src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/KoPubDotumMedium.woff") format("woff"); font-weight:normal; font-display:swap; }</style>
 <style>
   :root { --bg:#f3f6fa; --card:#fff; --ink:#1b2a41; --sub:#5b6b80; --line:#dfe5ee; --accent:#2563eb; --chip:#eef3fd; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif; line-height:1.6; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"KoPubDotum","Malgun Gothic",system-ui,sans-serif; line-height:1.6; }
   .wrap { max-width:880px; margin:0 auto; padding:56px 16px 80px; }
   .eyebrow { color:var(--accent); font-size:14px; font-weight:600; }
   h1 { font-size:34px; margin:8px 0 8px; }
@@ -64,6 +65,8 @@
   .toggles { display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; font-size:14px; margin-bottom:12px; }
   .toggles b { margin-right:4px; }
   .toggles label { cursor:pointer; }
+  .sch .orig { font-size:11px; font-weight:400; color:var(--sub); }
+  .calc { font-size:12px; color:#b45309; margin-left:6px; }
   .sch td.on.dis { background:#fdecec; } .sch td.on.land { background:#f4effd; } .sch td.on.trf { background:#eaf7f7; }
   @media (max-width:600px){ h1{font-size:24px;} .card{padding:20px;} }
 </style>
@@ -127,22 +130,52 @@
 
     const lawTags = laws => (laws||[]).map(l => `<span class="law">${esc(l)}</span>`).join("");
 
+    const parseT = t => {
+      if (/^D$/.test(t.trim())) return { a: 0, b: 0 };
+      const m = t.match(/D\s*\+\s*(\d+)(?:\s*~\s*(\d+))?/);
+      return m ? { a: +m[1], b: +(m[2] || m[1]) } : null;
+    };
+    const fmtT = (a, b) => a === 0 && b === 0 ? "D" : (a === b ? `D+${a}개월` : `D+${a}~${b}개월`);
+
     const scheduleView = (s, on) => {
       const tracks = s.tracks.filter(t => on[t.id] !== false);
+      const shown = r => tracks.some(t => r.c[t.id]);
+      const flat = s.phases.flatMap(ph => ph.rows);
+      const pos = flat.map(r => parseT(r.t));
+      const dur = flat.map((r, i) => {
+        if (!pos[i]) return 0;
+        for (let k = i + 1; k < flat.length; k++) if (pos[k]) return pos[k].a - pos[i].a;
+        return 0;
+      });
+      let shift = 0, lastEnd = 0;
+      const label = new Map();
+      flat.forEach((r, i) => {
+        if (!shown(r)) { shift += dur[i]; return; }
+        if (!pos[i]) { label.set(r, { t: r.t }); return; }
+        const a = pos[i].a - shift, b = pos[i].b - shift;
+        lastEnd = Math.max(lastEnd, b);
+        label.set(r, { t: fmtT(a, b), orig: shift ? r.t : "" });
+      });
       const head = `<tr><th>단계</th><th>개략 기간</th>${tracks.map(t => `<th>${esc(t.name)}</th>`).join("")}</tr>`;
       const body = s.phases.map(ph => {
-        const rows = ph.rows.filter(r => tracks.some(t => r.c[t.id]));
-        return rows.map((r, i) => `
+        const rows = ph.rows.filter(shown);
+        return rows.map((r, i) => {
+          const L = label.get(r);
+          return `
         <tr>
           ${i === 0 ? `<td class="ph" rowspan="${rows.length}">${esc(ph.name)}</td>` : ""}
-          <td class="t">${esc(r.t)}</td>
+          <td class="t">${esc(L.t)}${L.orig ? `<div class="orig">원래 ${esc(L.orig)}</div>` : ""}</td>
           ${tracks.map(t => r.c[t.id] ? `<td class="on ${t.id}">${esc(r.c[t.id])}</td>` : "<td></td>").join("")}
-        </tr>`).join("");
+        </tr>`;
+        }).join("");
       }).join("");
       const opts = s.tracks.filter(t => t.optional);
+      const total = shift > 0
+        ? `약 ${lastEnd}개월 <span class="calc">제외한 절차 기간을 빼고 자동 계산 · 원래 ${esc(s.total || "")}</span>`
+        : esc(s.total || "");
       return `
         ${opts.length ? `<div class="toggles"><b>해당 영향평가</b>${opts.map(t => `<label><input type="checkbox" data-t="${t.id}" ${on[t.id] !== false ? "checked" : ""}> ${esc(t.name)}</label>`).join("")}</div>` : ""}
-        <div class="meta"><span><b>기준</b> ${esc(s.base)}</span>${s.total ? `<span><b>총 소요</b> ${esc(s.total)}</span>` : ""}</div>
+        <div class="meta"><span><b>기준</b> ${esc(s.base)}</span>${s.total ? `<span><b>총 소요</b> ${total}</span>` : ""}</div>
         <div class="tbl-wrap"><table class="sch"><thead>${head}</thead><tbody>${body}</tbody></table></div>
         <div class="tlaws">${tracks.map(t => `<div><div class="st">${esc(t.name)} 근거</div>${lawTags(t.laws)}</div>`).join("")}</div>`;
     };
