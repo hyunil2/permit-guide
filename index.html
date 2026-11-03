@@ -12,90 +12,123 @@
   .eyebrow { color:var(--accent); font-size:14px; font-weight:600; }
   h1 { font-size:34px; margin:8px 0 8px; }
   .lead { color:var(--sub); margin:0 0 24px; }
-  .search { width:100%; padding:14px 16px; font-size:16px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+  .home { text-align:center; padding-top:8vh; }
+  .home h1 { font-size:30px; }
+  .search { width:100%; padding:16px 18px; font-size:17px; border:1px solid var(--line); border-radius:14px; background:#fff; }
   .search:focus { outline:2px solid var(--accent); border-color:transparent; }
-  .count { color:var(--sub); font-size:13px; margin:10px 2px 18px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:24px 28px; margin-bottom:16px; }
-  .card h2 { margin:0 0 4px; font-size:22px; }
+  .picks { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px; }
+  .pick { border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:999px; padding:8px 16px; font-size:15px; cursor:pointer; font-family:inherit; }
+  .pick:hover { border-color:var(--accent); color:var(--accent); }
+  .pick small { color:var(--sub); margin-left:6px; font-size:12px; }
+  .msg { color:var(--sub); font-size:14px; margin-top:16px; }
+  .back { display:inline-block; margin-bottom:20px; color:var(--accent); text-decoration:none; font-size:14px; cursor:pointer; background:none; border:none; padding:0; font-family:inherit; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:28px; }
+  .card h2 { margin:0 0 4px; font-size:26px; }
   .tag { display:inline-block; font-size:12px; background:var(--chip); color:var(--accent); padding:2px 8px; border-radius:6px; margin-bottom:8px; }
-  .summary { color:var(--sub); margin:4px 0 12px; }
-  .jeju { font-size:13px; background:#fff8e6; border:1px solid #f3e2b3; border-radius:8px; padding:8px 12px; margin-bottom:16px; }
+  .summary { color:var(--sub); margin:4px 0 14px; }
+  .jeju { font-size:13px; background:#fff8e6; border:1px solid #f3e2b3; border-radius:8px; padding:8px 12px; margin-bottom:20px; }
   ol.steps { list-style:none; padding:0; margin:0; counter-reset:s; }
-  ol.steps li { position:relative; padding:0 0 18px 44px; counter-increment:s; }
+  ol.steps li { position:relative; padding:0 0 20px 44px; counter-increment:s; }
   ol.steps li::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; }
   ol.steps li:not(:last-child)::after { content:""; position:absolute; left:13px; top:30px; bottom:2px; width:2px; background:var(--line); }
   .st { font-weight:700; }
   .sd { color:var(--sub); font-size:14px; }
-  .law { display:inline-block; font-size:12px; border:1px solid var(--line); border-radius:6px; padding:1px 7px; margin:4px 4px 0 0; color:var(--ink); text-decoration:none; }
-  .law:hover { border-color:var(--accent); color:var(--accent); }
+  .law { display:inline-block; font-size:12px; border:1px solid var(--line); border-radius:6px; padding:1px 7px; margin:4px 4px 0 0; }
   .notes { font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px; margin-top:4px; }
-  mark { background:#fde68a; padding:0 1px; }
-  details > summary { cursor:pointer; list-style:none; }
-  details > summary::-webkit-details-marker { display:none; }
-  .foot { color:var(--sub); font-size:12px; margin-top:28px; }
-  @media (max-width:600px){ h1{font-size:26px;} .card{padding:20px;} }
+  .foot { color:var(--sub); font-size:12px; margin-top:28px; text-align:center; }
+  @media (max-width:600px){ h1{font-size:24px;} .card{padding:20px;} }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="eyebrow">도시계획 실무지원</div>
-  <h1>사업유형별 인허가 절차 안내</h1>
-  <p class="lead">사업유형, 절차명, 법령 조문으로 검색할 수 있습니다.</p>
-
-  <input id="q" class="search" type="search" placeholder="예: 관광농원, 사업계획 승인, 제106조, 준공" autocomplete="off">
-  <div id="count" class="count"></div>
-  <div id="list"></div>
-
-  <p class="foot">기준일 <span id="updated"></span> · 근거 조문은 국가법령정보센터에서 최신 개정 여부를 확인하세요.</p>
-</div>
+<div class="wrap" id="app"></div>
+<p class="foot">기준일 <span id="updated"></span> · 근거 조문은 국가법령정보센터에서 최신 개정 여부를 확인하세요.</p>
 
 <script src="data.js"></script>
 <script>
-  const $list = document.getElementById("list");
-  const $q = document.getElementById("q");
-  const $count = document.getElementById("count");
-  document.getElementById("updated").textContent = UPDATED;
+  const app = document.getElementById("app");
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-  const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const hl = (text, q) => {
-    const t = esc(text);
-    if (!q) return t;
-    const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-    return t.replace(re, m => `<mark>${m}</mark>`);
-  };
-  function haystack(p) {
-    return [p.name, p.category, p.summary, ...(p.keywords||[]),
-      ...p.steps.flatMap(s => [s.title, s.desc, ...(s.laws||[])])].join(" ").toLowerCase();
+  if (typeof PERMITS === "undefined") {
+    app.innerHTML = '<div class="card">data.js를 불러오지 못했습니다. 저장소에 data.js가 index.html과 같은 위치에 있는지 확인하세요.</div>';
+  } else {
+    document.getElementById("updated").textContent = UPDATED;
+
+    const find = q => {
+      const k = q.trim().toLowerCase().replace(/\s/g, "");
+      if (!k) return [];
+      const norm = s => s.toLowerCase().replace(/\s/g, "");
+      return PERMITS.filter(p => [p.name, ...(p.keywords||[])].some(w => norm(w).includes(k) || k.includes(norm(w))));
+    };
+
+    const home = (q = "", msg = "") => {
+      app.innerHTML = `
+        <div class="home">
+          <div class="eyebrow">도시계획 실무지원</div>
+          <h1>어떤 사업을 검토하시나요?</h1>
+          <p class="lead">사업유형을 입력하거나 아래에서 선택하세요.</p>
+          <input id="q" class="search" type="search" placeholder="예: 관광농원, 지구단위계획, 관광휴양형" autocomplete="off" value="${esc(q)}">
+          <div class="msg" id="msg">${msg}</div>
+          <div class="picks" id="picks"></div>
+        </div>`;
+      const $q = document.getElementById("q");
+      const $picks = document.getElementById("picks");
+      const $msg = document.getElementById("msg");
+      const drawPicks = list => {
+        $picks.innerHTML = list.map(p => `<button class="pick" data-id="${p.id}">${esc(p.name)}<small>${esc(p.category)}</small></button>`).join("");
+      };
+      drawPicks(PERMITS);
+      $q.addEventListener("input", () => {
+        const hits = find($q.value);
+        if (!$q.value.trim()) { $msg.textContent = ""; drawPicks(PERMITS); return; }
+        $msg.textContent = hits.length ? `${hits.length}개 사업유형이 있습니다. Enter를 누르거나 선택하세요.` : "해당 사업유형이 아직 등록되지 않았습니다.";
+        drawPicks(hits.length ? hits : []);
+      });
+      $q.addEventListener("keydown", e => {
+        if (e.key !== "Enter") return;
+        const hits = find($q.value);
+        if (hits.length) location.hash = hits[0].id;
+      });
+      $picks.addEventListener("click", e => {
+        const b = e.target.closest(".pick");
+        if (b) location.hash = b.dataset.id;
+      });
+      $q.focus();
+    };
+
+    const detail = p => {
+      app.innerHTML = `
+        <button class="back" id="back">← 다른 사업 검토하기</button>
+        <article class="card">
+          <span class="tag">${esc(p.category)}</span>
+          <h2>${esc(p.name)}</h2>
+          <p class="summary">${esc(p.summary)}</p>
+          ${p.jejuNote ? `<div class="jeju">제주 특례 · ${esc(p.jejuNote)}</div>` : ""}
+          <ol class="steps">
+            ${p.steps.map(s => `
+              <li>
+                <div class="st">${esc(s.title)}</div>
+                <div class="sd">${esc(s.desc)}</div>
+                ${(s.laws||[]).map(l => `<span class="law">${esc(l)}</span>`).join("")}
+              </li>`).join("")}
+          </ol>
+          ${(p.notes||[]).length ? `<div class="notes">${p.notes.map(esc).join("<br>")}</div>` : ""}
+        </article>`;
+      document.getElementById("back").onclick = () => { location.hash = ""; };
+      window.scrollTo(0, 0);
+    };
+
+    const route = () => {
+      const id = decodeURIComponent(location.hash.slice(1));
+      const p = PERMITS.find(x => x.id === id);
+      if (p) return detail(p);
+      const q = new URLSearchParams(location.search).get("q") || "";
+      if (q) { const hits = find(q); if (hits.length === 1) { location.hash = hits[0].id; return; } }
+      home(q);
+      if (q) document.getElementById("q").dispatchEvent(new Event("input"));
+    };
+    window.addEventListener("hashchange", route);
+    route();
   }
-
-  function render() {
-    const q = $q.value.trim();
-    const ql = q.toLowerCase();
-    const hits = PERMITS.filter(p => !ql || haystack(p).includes(ql));
-    $count.textContent = q ? `"${q}" 검색 결과 ${hits.length}건` : `전체 ${PERMITS.length}개 사업유형`;
-    $list.innerHTML = hits.map(p => `
-      <article class="card">
-        <span class="tag">${esc(p.category)}</span>
-        <h2>${hl(p.name, q)}</h2>
-        <p class="summary">${hl(p.summary, q)}</p>
-        ${p.jejuNote ? `<div class="jeju">제주 특례 · ${esc(p.jejuNote)}</div>` : ""}
-        <ol class="steps">
-          ${p.steps.map(s => `
-            <li>
-              <div class="st">${hl(s.title, q)}</div>
-              <div class="sd">${hl(s.desc, q)}</div>
-              ${(s.laws||[]).map(l => `<span class="law">${hl(l, q)}</span>`).join("")}
-            </li>`).join("")}
-        </ol>
-        ${(p.notes||[]).length ? `<div class="notes">${p.notes.map(esc).join("<br>")}</div>` : ""}
-      </article>`).join("") || `<div class="card">검색 결과가 없습니다.</div>`;
-  }
-
-  $q.addEventListener("input", render);
-  // 주소 뒤에 ?q=관광농원 을 붙이면 검색된 상태로 열림 (노션 링크용)
-  const init = new URLSearchParams(location.search).get("q");
-  if (init) $q.value = init;
-  render();
 </script>
 </body>
 </html>
