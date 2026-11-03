@@ -68,6 +68,25 @@
   .sch .orig { font-size:11px; font-weight:400; color:var(--sub); }
   .calc { font-size:12px; color:#b45309; margin-left:6px; }
   .sch td.on.dis { background:#fdecec; } .sch td.on.land { background:#f4effd; } .sch td.on.trf { background:#eaf7f7; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .topbar .back { margin-bottom:0; }
+  .pdf { border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:10px; padding:8px 16px; font-size:14px; cursor:pointer; font-family:inherit; }
+  .pdf:hover { opacity:.9; }
+  .printsel { display:none; }
+  .printbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:18px 0 6px; padding:14px 16px; border:1px solid #cfe0fb; background:#f5f9ff; border-radius:12px; }
+  .printbar span { font-size:14px; color:var(--sub); }
+  .printbar .pdf { font-size:15px; padding:10px 20px; }
+  @page { size:A4 landscape; margin:10mm; }
+  @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+  body.printing { background:#fff; }
+  body.printing .wrap, body.printing .wrap.wide { max-width:none; padding:0; margin:0; }
+  body.printing .topbar, body.printing .printbar, body.printing .vpicks, body.printing .q, body.printing .toggles label { display:none !important; }
+  body.printing .printsel { display:inline; }
+  body.printing .card { border:none; padding:0; border-radius:0; }
+  body.printing .tbl-wrap { overflow:visible; }
+  body.printing table.sch { min-width:0; }
+  body.printing .sch thead th { position:static; }
+  body.printing .foot { margin:8px 0 0; text-align:left; }
   @media (max-width:600px){ h1{font-size:24px;} .card{padding:20px;} }
 </style>
 </head>
@@ -174,7 +193,7 @@
         ? `약 ${lastEnd}개월 <span class="calc">제외한 절차 기간을 빼고 자동 계산 · 원래 ${esc(s.total || "")}</span>`
         : esc(s.total || "");
       return `
-        ${opts.length ? `<div class="toggles"><b>해당 영향평가</b>${opts.map(t => `<label><input type="checkbox" data-t="${t.id}" ${on[t.id] !== false ? "checked" : ""}> ${esc(t.name)}</label>`).join("")}</div>` : ""}
+        ${opts.length ? `<div class="toggles"><b>해당 영향평가</b><span class="printsel">${esc(opts.filter(t => on[t.id] !== false).map(t => t.name).join(", ") || "해당 없음")}</span>${opts.map(t => `<label><input type="checkbox" data-t="${t.id}" ${on[t.id] !== false ? "checked" : ""}> ${esc(t.name)}</label>`).join("")}</div>` : ""}
         <div class="meta"><span><b>기준</b> ${esc(s.base)}</span>${s.total ? `<span><b>총 소요</b> ${total}</span>` : ""}</div>
         <div class="tbl-wrap"><table class="sch"><thead>${head}</thead><tbody>${body}</tbody></table></div>
         <div class="tlaws">${tracks.map(t => `<div><div class="st">${esc(t.name)} 근거</div>${lawTags(t.laws)}</div>`).join("")}</div>`;
@@ -194,7 +213,8 @@
       const on = {};
       if (x.schedule) x.schedule.tracks.forEach(t => { if (t.off) on[t.id] = false; });
       const draw = () => {
-        el.innerHTML = `${x.tip ? `<div class="tip">${esc(x.tip)}</div>` : ""}${x.schedule ? scheduleView(x.schedule, on) : ""}${stepsView(x.steps)}`;
+        el.innerHTML = `${x.tip ? `<div class="tip">${esc(x.tip)}</div>` : ""}${x.schedule ? scheduleView(x.schedule, on) : ""}${stepsView(x.steps)}
+          <div class="printbar"><span>선택한 절차와 영향평가 기준으로 A4 가로 한 장에 출력합니다.</span><button class="pdf" data-print>선택한 절차 PDF로 출력</button></div>`;
         el.querySelectorAll("input[data-t]").forEach(cb => cb.onchange = () => { on[cb.dataset.t] = cb.checked; draw(); });
       };
       draw();
@@ -205,7 +225,10 @@
       const wide = !!(p.schedule || (v && v.schedule));
       app.classList.toggle("wide", wide);
       app.innerHTML = `
-        <button class="back" id="back">← 다른 사업 검토하기</button>
+        <div class="topbar">
+          <button class="back" id="back">← 다른 사업 검토하기</button>
+          <button class="pdf" id="pdf" title="인쇄 창에서 대상을 'PDF로 저장'으로 선택하세요">PDF로 출력</button>
+        </div>
         <article class="card">
           <span class="tag">${esc(p.category)}</span>
           <h2>${esc(p.name)}</h2>
@@ -222,8 +245,42 @@
       if (v) mountBody(document.getElementById("body"), v);
       else if (!p.variants) mountBody(document.getElementById("body"), p);
       document.getElementById("back").onclick = () => { location.hash = ""; };
+      const doPrint = () => {
+        const old = document.title;
+        document.title = `${p.name}${v ? "_" + v.label : ""}_인허가절차`.replace(/[\\/:*?"<>|]/g, "");
+        window.print();
+        document.title = old;
+      };
+      document.getElementById("pdf").onclick = doPrint;
+      app.onclick = e => { if (e.target.closest("[data-print]")) doPrint(); };
       if (!vid) window.scrollTo(0, 0);
     };
+
+    const PAGE_W = 277 * 96 / 25.4, PAGE_H = 190 * 96 / 25.4 * 0.93;
+    const fitPage = () => {
+      const b = document.body;
+      b.classList.add("printing");
+      b.style.zoom = 1;
+      const fits = z => {
+        b.style.width = (PAGE_W / z) + "px";
+        return document.documentElement.scrollHeight * z <= PAGE_H;
+      };
+      let z = 1;
+      if (!fits(1)) {
+        let lo = 0.15, hi = 1;
+        for (let i = 0; i < 14; i++) { const m = (lo + hi) / 2; if (fits(m)) lo = m; else hi = m; }
+        z = lo;
+        fits(z);
+      }
+      b.style.zoom = z;
+    };
+    const unfit = () => {
+      const b = document.body;
+      b.classList.remove("printing");
+      b.style.zoom = ""; b.style.width = "";
+    };
+    window.addEventListener("beforeprint", fitPage);
+    window.addEventListener("afterprint", unfit);
 
     const route = () => {
       const [id, vid] = decodeURIComponent(location.hash.slice(1)).split("/");
