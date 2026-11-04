@@ -135,13 +135,13 @@
 <div class="wrap" id="app"></div>
 <p class="foot">기준일 <span id="updated"></span> · 근거 조문은 국가법령정보센터에서 최신 개정 여부를 확인하세요.</p>
 
-<script src="data.js"></script>
+<script src="data.js?v=20261104"></script>
 <script>
   const app = document.getElementById("app");
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-  if (typeof PERMITS === "undefined") {
-    app.innerHTML = '<div class="card">data.js를 불러오지 못했습니다. 저장소에 data.js가 index.html과 같은 위치에 있는지 확인하세요.</div>';
+  if (typeof PERMITS === "undefined" || typeof CRITERIA === "undefined") {
+    app.innerHTML = '<div class="card">최신 data.js를 불러오지 못했습니다. 저장소의 data.js가 2026-11-04 버전인지 확인한 뒤 Ctrl+F5로 새로고침하세요.</div>';
   } else {
     document.getElementById("updated").textContent = UPDATED;
 
