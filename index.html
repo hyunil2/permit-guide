@@ -128,6 +128,57 @@
   .procs .search { max-width:560px; }
   .procs .picks { justify-content:flex-start; }
   .disclaim { font-size:12.5px; color:var(--sub); margin-top:10px; }
+
+  .stepbox { margin-bottom:28px; }
+  .sh { display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+  .sh h2 { margin:0; font-size:20px; }
+  .num { width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  details.screen > summary { cursor:pointer; font-weight:700; font-size:14px; color:var(--accent); list-style:none; }
+  details.screen > summary::before { content:"＋ "; } details.screen[open] > summary::before { content:"－ "; }
+  details.screen[open] > summary { margin-bottom:12px; }
+  .flags button { font:inherit; font-size:13px; color:var(--sub); background:none; border:1px solid var(--line); border-radius:8px; padding:2px 10px; cursor:pointer; margin-left:auto; }
+  .crit { display:block; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .row { border-top:1px solid var(--line); border-left:4px solid transparent; }
+  .row:first-child { border-top:none; }
+  .row.yes { border-left-color:#dc2626; } .row.check { border-left-color:#d97706; } .row.no { opacity:.7; }
+  .row > summary { list-style:none; cursor:pointer; display:grid; grid-template-columns:64px 210px 1fr 230px 76px; gap:10px; align-items:center; padding:11px 14px; font-size:14px; }
+  .row > summary::-webkit-details-marker { display:none; }
+  .row > summary:hover { background:#f7f9fc; }
+  .row .grp { justify-self:start; }
+  .rt { font-weight:700; }
+  .rb { color:var(--ink); }
+  .rl { color:var(--sub); font-size:12.5px; }
+  .row .badge, .row .more { justify-self:end; }
+  .more { font-size:12px; color:var(--accent); }
+  .row[open] .more { color:var(--sub); }
+  .rd { padding:4px 18px 16px 88px; display:flex; flex-direction:column; gap:8px; }
+  .rd ul { margin:0; padding:0; list-style:none; font-size:13.5px; }
+  .rd li { padding:3px 0; border-top:1px dashed var(--line); } .rd li:first-child { border-top:none; }
+  .rd li b { display:inline-block; min-width:72px; margin-right:4px; }
+  .row.yes .why { background:#fff5f5; } .row.check .why { background:#fffaf0; }
+  .sumbar .hint { color:var(--sub); }
+  .procs { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; margin-top:12px; border:none; padding:0; }
+  .pc { display:flex; flex-direction:column; gap:4px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px; text-decoration:none; color:var(--ink); }
+  .pc:hover { border-color:var(--accent); }
+  .pc.rec { border-color:#93b4f5; background:#f7faff; }
+  .pc-h { display:flex; gap:6px; align-items:center; }
+  .pc-cat { font-size:12px; color:var(--accent); }
+  .pc-n { font-weight:700; font-size:16px; }
+  .pc-p { font-size:13px; color:var(--sub); }
+  .pc-go { font-size:13px; color:var(--accent); margin-top:4px; }
+  .stepbox .search { max-width:none; }
+  .basis { margin-top:22px; border-top:2px solid var(--ink); padding-top:14px; }
+  .basis h3 { margin:0 0 6px; font-size:17px; }
+  .bmain { margin:0 0 10px; font-size:14.5px; }
+  .btbl { width:100%; border-collapse:collapse; font-size:13.5px; }
+  .btbl th, .btbl td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  .btbl th { background:#f7f9fc; }
+  .btbl td:first-child { width:220px; font-weight:600; }
+  .btbl td div + div { margin-top:3px; }
+  .btbl tr.off td { color:var(--sub); }
+  .offt { font-size:11.5px; font-weight:400; color:var(--sub); }
+  .bnote { font-size:12px; color:var(--sub); margin:8px 0 0; }
+  @media (max-width:860px){ .row > summary { grid-template-columns:auto 1fr auto; } .rb, .rl { grid-column:1 / -1; } .rd { padding-left:18px; } .btbl td:first-child { width:38%; } }
   @media (max-width:600px){ h1{font-size:24px;} .card{padding:20px;} .hero h1{font-size:24px;} .crit{grid-template-columns:1fr;} }
 </style>
 </head>
@@ -135,7 +186,7 @@
 <div class="wrap" id="app"></div>
 <p class="foot">기준일 <span id="updated"></span> · 근거 조문은 국가법령정보센터에서 최신 개정 여부를 확인하세요.</p>
 
-<script src="data.js?v=20261104"></script>
+<script src="data.js?v=20261104b"></script>
 <script>
   const app = document.getElementById("app");
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -152,71 +203,104 @@
       return PERMITS.filter(p => [p.name, ...(p.keywords||[])].some(w => norm(w).includes(k) || k.includes(norm(w))));
     };
 
-    const ST = { type:"", zone:"", site:"", gfa:"", use:"", prot:false, mid:false, relic:false };
+    const ST = { type:"", zone:"", site:"", gfa:"", use:"", prot:false, mid:false, relic:false, open:false, q:"" };
     const pname = id => (PERMITS.find(p => p.id === id) || {}).name || id;
     const relLinks = ids => (ids||[]).filter(id => PERMITS.some(p => p.id === id)).map(id => `<a href="#${id}">${esc(pname(id))} →</a>`).join("");
     const opt = (list, v) => list.map(o => `<option value="${o.k}" ${o.k === v ? "selected" : ""}>${esc(o.n)}</option>`).join("");
+    const period = p => p.schedule ? (p.schedule.total || "") : [...new Set((p.variants || []).map(v => v.tier).filter(t => t && /개월/.test(t)))].join(" / ") || `${(p.variants || []).length}가지 유형`;
+    const L = { yes:"해당", check:"확인 필요", no:"해당 없음" };
 
-    const drawCrit = () => {
+    const evalAll = () => {
       const n = v => Math.max(0, Number(String(v).replace(/[^0-9.]/g, "")) || 0);
       const inp = { type:ST.type, Z:ZONES.find(z => z.k === ST.zone), site:n(ST.site), gfa:n(ST.gfa), use:ST.use, prot:ST.prot, mid:ST.mid, relic:ST.relic };
       const R = {};
       CRITERIA.forEach(c => { try { R[c.id] = c.test(inp, R); } catch (e) { R[c.id] = null; } });
+      return R;
+    };
+
+    const drawCrit = () => {
+      const R = evalAll();
       const any = CRITERIA.some(c => R[c.id]);
       const rank = { yes:0, check:1, no:2 };
       const list = any ? [...CRITERIA].sort((a, b) => (rank[R[a.id]?.s] ?? 3) - (rank[R[b.id]?.s] ?? 3)) : CRITERIA;
-      const L = { yes:"해당", check:"확인 필요", no:"해당 없음" };
       document.getElementById("crit").innerHTML = list.map(c => {
         const r = R[c.id];
-        return `<article class="cr ${r ? r.s : ""}">
-          <div class="cr-h"><span class="grp">${esc(c.group)}</span><h3>${esc(c.title)}</h3>${r ? `<span class="badge ${r.s}">${L[r.s]}</span>` : ""}</div>
-          <ul>${c.rules.map(x => `<li><b>${esc(x[0])}</b>${esc(x[1])}</li>`).join("")}</ul>
-          ${r ? `<div class="why">${esc(r.why)}</div>` : ""}
-          ${c.after ? `<div class="after">${esc(c.after)}</div>` : ""}
-          <div class="lawrow">관련 법령 확인 후 진행 · ${lawTags(c.laws)}</div>
-          ${relLinks(c.go) ? `<div class="rel">${relLinks(c.go)}</div>` : ""}
-        </article>`;
+        return `<details class="row ${r ? r.s : ""}">
+          <summary>
+            <span class="grp">${esc(c.group)}</span>
+            <span class="rt">${esc(c.title)}</span>
+            <span class="rb">${esc(c.brief)}</span>
+            <span class="rl">${esc(c.lawBrief)} 확인 후 진행</span>
+            ${r ? `<span class="badge ${r.s}">${L[r.s]}</span>` : `<span class="more">상세</span>`}
+          </summary>
+          <div class="rd">
+            ${r ? `<div class="why">${esc(r.why)}</div>` : ""}
+            <ul>${c.rules.map(x => `<li><b>${esc(x[0])}</b>${esc(x[1])}</li>`).join("")}</ul>
+            ${c.after ? `<div class="after">${esc(c.after)}</div>` : ""}
+            <div class="lawrow">근거 · ${lawTags(c.laws)}</div>
+            ${relLinks(c.go) ? `<div class="rel">관련 절차도 ${relLinks(c.go)}</div>` : ""}
+          </div>
+        </details>`;
       }).join("");
       const cnt = s => CRITERIA.filter(c => R[c.id]?.s === s).length;
-      const t = PTYPES.find(p => p.k === ST.type);
       document.getElementById("sum").innerHTML = any
-        ? `<span><b>해당 ${cnt("yes")}</b> · 확인 필요 ${cnt("check")} · 해당 없음 ${cnt("no")}</span>${t && relLinks(t.go) ? `<span class="go">관련 절차 ${t.go.filter(id => PERMITS.some(p => p.id === id)).map(id => `<a href="#${id}">${esc(pname(id))}</a>`).join("")}</span>` : ""}`
-        : `<span>사업 조건을 입력하면 항목별로 해당 여부를 표시합니다. 입력 전에는 대상 기준만 보여 줍니다.</span>`;
+        ? `<b>해당 ${cnt("yes")}</b> · 확인 필요 ${cnt("check")} · 해당 없음 ${cnt("no")} <span class="hint">항목을 누르면 상세 기준과 판정 사유가 보입니다.</span>`
+        : `<span class="hint">항목을 누르면 상세 기준·근거 조문·관련 절차도가 보입니다.</span>`;
+      drawProcs();
+    };
+
+    const drawProcs = () => {
+      const t = PTYPES.find(p => p.k === ST.type);
+      const rec = new Set(t ? t.go : []);
+      const q = ST.q.trim();
+      let list = q ? find(q) : PERMITS;
+      list = [...list].sort((a, b) => (rec.has(b.id) ? 1 : 0) - (rec.has(a.id) ? 1 : 0));
+      document.getElementById("msg").textContent = q ? (list.length ? `${list.length}개 절차도` : "해당 사업유형이 아직 등록되지 않았습니다.") : "";
+      document.getElementById("procs").innerHTML = list.map(p => `
+        <a class="pc ${rec.has(p.id) ? "rec" : ""}" href="#${p.id}">
+          <div class="pc-h">${rec.has(p.id) ? `<span class="badge yes">추천</span>` : ""}<span class="pc-cat">${esc(p.category)}</span></div>
+          <div class="pc-n">${esc(p.name)}</div>
+          <div class="pc-p">${esc(period(p))}</div>
+          <div class="pc-go">절차도 보기 →</div>
+        </a>`).join("");
     };
 
     const home = (q = "", msg = "") => {
+      if (q) ST.q = q;
       app.classList.remove("wide");
       app.classList.add("home2");
       app.innerHTML = `
         <header class="hero">
           <div class="eyebrow">도시계획 실무지원 · 제주특별자치도</div>
-          <h1>검토 전에 확인할 사항</h1>
-          <p class="lead">환경·교통·재해 영향평가와 개발사업시행승인, 경관·도시계획위원회 심의 대상 기준입니다. 사업 조건을 넣으면 1차 판정을 보여 줍니다.</p>
+          <h1>제주 개발사업 인허가 검토</h1>
         </header>
-        <section class="screen">
-          <div class="ttl">사업 조건 입력<button type="button" id="reset">초기화</button></div>
-          <div class="fgrid">
-            <label>사업 유형<select id="f-type"><option value="">선택</option>${opt(PTYPES, ST.type)}</select></label>
-            <label>용도지역<select id="f-zone"><option value="">선택</option>${opt(ZONES, ST.zone)}</select></label>
-            <label>부지(사업)면적 ㎡<input id="f-site" inputmode="numeric" placeholder="예: 30000" value="${esc(ST.site)}"></label>
-            <label>건축 연면적 ㎡ (지하층 제외)<input id="f-gfa" inputmode="numeric" placeholder="예: 12000" value="${esc(ST.gfa)}"></label>
-            <label>건축물 주용도 (교통 판정)<select id="f-use">${opt(BUSES, ST.use)}</select></label>
-          </div>
-          <div class="flags">
-            <label><input type="checkbox" id="f-prot" ${ST.prot ? "checked" : ""}> 절대·상대보전지역 / 경관보전지구 1·2등급 포함</label>
-            <label><input type="checkbox" id="f-mid" ${ST.mid ? "checked" : ""}> 중산간지역·해안선 50m 이내</label>
-            <label><input type="checkbox" id="f-relic" ${ST.relic ? "checked" : ""}> 매장유산 유존지역 포함</label>
-          </div>
-          <div class="disclaim">1차 스크리닝입니다. 실제 대상 여부는 근거 조문의 세부 요건(사업 종류, 시설면적, 중복 적용 등)과 담당부서 협의로 확정하세요.</div>
+        <section class="stepbox">
+          <div class="sh"><span class="num">1</span><h2>검토 전 확인사항</h2></div>
+          <details class="screen" ${ST.open ? "open" : ""} id="scr">
+            <summary>사업 규모를 입력해 해당 여부 보기</summary>
+            <div class="fgrid">
+              <label>사업 유형<select id="f-type"><option value="">선택</option>${opt(PTYPES, ST.type)}</select></label>
+              <label>용도지역<select id="f-zone"><option value="">선택</option>${opt(ZONES, ST.zone)}</select></label>
+              <label>부지(사업)면적 ㎡<input id="f-site" inputmode="numeric" placeholder="예: 30000" value="${esc(ST.site)}"></label>
+              <label>건축 연면적 ㎡ (지하층 제외)<input id="f-gfa" inputmode="numeric" placeholder="예: 12000" value="${esc(ST.gfa)}"></label>
+              <label>건축물 주용도 (교통 판정)<select id="f-use">${opt(BUSES, ST.use)}</select></label>
+            </div>
+            <div class="flags">
+              <label><input type="checkbox" id="f-prot" ${ST.prot ? "checked" : ""}> 절대·상대보전지역 / 경관보전지구 1·2등급 포함</label>
+              <label><input type="checkbox" id="f-mid" ${ST.mid ? "checked" : ""}> 중산간지역·해안선 50m 이내</label>
+              <label><input type="checkbox" id="f-relic" ${ST.relic ? "checked" : ""}> 매장유산 유존지역 포함</label>
+              <button type="button" id="reset">초기화</button>
+            </div>
+            <div class="disclaim">1차 스크리닝입니다. 실제 대상 여부는 근거 조문의 세부 요건과 담당부서 협의로 확정하세요.</div>
+          </details>
+          <div class="sumbar" id="sum"></div>
+          <div class="crit" id="crit"></div>
         </section>
-        <div class="sumbar" id="sum"></div>
-        <section class="crit" id="crit"></section>
-        <section class="procs">
-          <h2>사업유형별 인허가 절차</h2>
-          <p class="lead">절차도·일정표가 있는 사업유형입니다. 검색하거나 선택하세요.</p>
-          <input id="q" class="search" type="search" placeholder="예: 유원지, 산업단지, 관광숙박, 정비구역" autocomplete="off" value="${esc(q)}">
+        <section class="stepbox">
+          <div class="sh"><span class="num">2</span><h2>절차도 선택</h2></div>
+          <input id="q" class="search" type="search" placeholder="사업유형 검색 (예: 유원지, 산업단지, 관광숙박, 정비구역)" autocomplete="off" value="${esc(ST.q)}">
           <div class="msg" id="msg">${msg}</div>
-          <div class="picks" id="picks"></div>
+          <div class="procs" id="procs"></div>
         </section>`;
       const bind = (id, key, ev = "input") => {
         const el = document.getElementById(id);
@@ -225,30 +309,16 @@
       bind("f-type","type","change"); bind("f-zone","zone","change"); bind("f-use","use","change");
       bind("f-site","site"); bind("f-gfa","gfa");
       bind("f-prot","prot","change"); bind("f-mid","mid","change"); bind("f-relic","relic","change");
+      document.getElementById("scr").addEventListener("toggle", e => { ST.open = e.target.open; });
       document.getElementById("reset").onclick = () => { Object.assign(ST, { type:"", zone:"", site:"", gfa:"", use:"", prot:false, mid:false, relic:false }); home(); };
-      drawCrit();
       const $q = document.getElementById("q");
-      const $picks = document.getElementById("picks");
-      const $msg = document.getElementById("msg");
-      const drawPicks = list => {
-        $picks.innerHTML = list.map(p => `<button class="pick" data-id="${p.id}">${esc(p.name)}<small>${esc(p.category)}</small></button>`).join("");
-      };
-      drawPicks(PERMITS);
-      $q.addEventListener("input", () => {
-        const hits = find($q.value);
-        if (!$q.value.trim()) { $msg.textContent = ""; drawPicks(PERMITS); return; }
-        $msg.textContent = hits.length ? `${hits.length}개 사업유형이 있습니다. Enter를 누르거나 선택하세요.` : "해당 사업유형이 아직 등록되지 않았습니다.";
-        drawPicks(hits.length ? hits : []);
-      });
+      $q.addEventListener("input", () => { ST.q = $q.value; drawProcs(); });
       $q.addEventListener("keydown", e => {
         if (e.key !== "Enter") return;
         const hits = find($q.value);
         if (hits.length) location.hash = hits[0].id;
       });
-      $picks.addEventListener("click", e => {
-        const b = e.target.closest(".pick");
-        if (b) location.hash = b.dataset.id;
-      });
+      drawCrit();
     };
 
     const lawTags = laws => (laws||[]).map(l => `<span class="law">${esc(l)}</span>`).join("");
@@ -299,8 +369,50 @@
       return `
         ${opts.length ? `<div class="toggles"><b>해당 영향평가</b><span class="printsel">${esc(opts.filter(t => on[t.id] !== false).map(t => t.name).join(", ") || "해당 없음")}</span>${opts.map(t => `<label><input type="checkbox" data-t="${t.id}" ${on[t.id] !== false ? "checked" : ""}> ${esc(t.name)}</label>`).join("")}</div>` : ""}
         <div class="meta"><span><b>기준</b> ${esc(s.base)}</span>${s.total ? `<span><b>총 소요</b> ${total}</span>` : ""}</div>
-        <div class="tbl-wrap"><table class="sch"><thead>${head}</thead><tbody>${body}</tbody></table></div>
-        <div class="tlaws">${tracks.map(t => `<div><div class="st">${esc(t.name)} 근거</div>${lawTags(t.laws)}</div>`).join("")}</div>`;
+        <div class="tbl-wrap"><table class="sch"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+    };
+
+
+    const LAWS = [
+      ["제주 개발사업시행 승인 조례", "「제주특별자치도 개발사업시행 승인 등에 관한 조례」"],
+      ["개발사업시행 승인 조례", "「제주특별자치도 개발사업시행 승인 등에 관한 조례」"],
+      ["제주 환경영향평가 조례", "「제주특별자치도 환경영향평가 조례」"],
+      ["제주 도시교통정비 촉진 조례", "「제주특별자치도 도시교통정비 촉진에 관한 조례」"],
+      ["제주 건축계획심의 조례", "「제주특별자치도 건축계획심의에 관한 조례」"],
+      ["제주 도시계획 조례", "「제주특별자치도 도시계획 조례」"],
+      ["제주 경관 조례", "「제주특별자치도 경관 조례」"],
+      ["제주특별법", "「제주특별자치도 설치 및 국제자유도시 조성을 위한 특별법」"],
+      ["국토계획법", "「국토의 계획 및 이용에 관한 법률」"],
+      ["산업입지법", "「산업입지 및 개발에 관한 법률」"],
+      ["산단특례법", "「산업단지 인·허가 절차 간소화를 위한 특례법」"],
+      ["도시정비법", "「도시 및 주거환경정비법」"],
+      ["도시교통정비 촉진법", "「도시교통정비 촉진법」"],
+      ["환경영향평가법", "「환경영향평가법」"],
+      ["자연재해대책법", "「자연재해대책법」"],
+      ["국가유산영향진단법", "「국가유산영향진단법」"],
+      ["농어촌정비법", "「농어촌정비법」"],
+      ["관광진흥법", "「관광진흥법」"],
+      ["주택법", "「주택법」"],
+      ["경관법", "「경관법」"],
+      ["건축법", "「건축법」"]
+    ];
+    const LAW_RE = new RegExp(LAWS.map(x => x[0].replace(/\s/g, "\\s")).join("|"), "g");
+    const fullLaw = t => esc(t).replace(LAW_RE, m => LAWS.find(x => x[0] === m)[1]);
+    const basisView = (P, x, on) => {
+      const mains = (P.category || "").split("·").map(t => t.trim()).filter(Boolean);
+      let rows = [];
+      if (x.schedule) rows = x.schedule.tracks.map(t => ({ k: t.name, laws: t.laws || [], off: on[t.id] === false }));
+      else rows = (x.steps || []).filter(s => (s.laws || []).length).map(s => ({ k: s.title, laws: s.laws }));
+      if (!rows.length && !mains.length) return "";
+      return `
+        <section class="basis">
+          <h3>법적 근거</h3>
+          <p class="bmain">이 절차는 ${mains.map(fullLaw).join(", ")}에 따라 진행합니다.</p>
+          ${rows.length ? `<table class="btbl"><thead><tr><th>${x.schedule ? "절차 구분" : "절차 단계"}</th><th>근거 법령</th></tr></thead><tbody>
+            ${rows.map(r => `<tr class="${r.off ? "off" : ""}"><td>${esc(r.k)}${r.off ? `<div class="offt">이번 일정에서 제외</div>` : ""}</td><td>${r.laws.map(l => `<div>${fullLaw(l)}</div>`).join("")}</td></tr>`).join("")}
+          </tbody></table>` : ""}
+          <p class="bnote">'(조문 미확인)' 표시는 근거 조문을 확인하지 못한 항목입니다. 적용 전 국가법령정보센터에서 현행 조문을 확인하세요.</p>
+        </section>`;
     };
 
     const stepsView = steps => `
@@ -313,11 +425,11 @@
           </li>`).join("")}
       </ol>`;
 
-    const mountBody = (el, x) => {
+    const mountBody = (el, x, P) => {
       const on = {};
       if (x.schedule) x.schedule.tracks.forEach(t => { if (t.off) on[t.id] = false; });
       const draw = () => {
-        el.innerHTML = `${(x.checks||[]).map(c => `<div class="check"><div class="st">확인 · ${esc(c.title)}</div><div class="sd">${esc(c.desc)}</div>${lawTags(c.laws)}</div>`).join("")}${x.tip ? `<div class="tip">${esc(x.tip)}</div>` : ""}${x.schedule ? scheduleView(x.schedule, on) : ""}${stepsView(x.steps)}
+        el.innerHTML = `${(x.checks||[]).map(c => `<div class="check"><div class="st">확인 · ${esc(c.title)}</div><div class="sd">${esc(c.desc)}</div>${lawTags(c.laws)}</div>`).join("")}${x.tip ? `<div class="tip">${esc(x.tip)}</div>` : ""}${x.schedule ? scheduleView(x.schedule, on) : ""}${stepsView(x.steps)}${basisView(P, x, on)}
           <div class="printbar"><span>선택한 절차와 영향평가 기준으로 A4 가로 한 장에 출력합니다.</span><button class="pdf" data-print>선택한 절차 PDF로 출력</button></div>`;
         el.querySelectorAll("input[data-t]").forEach(cb => cb.onchange = () => { on[cb.dataset.t] = cb.checked; draw(); });
       };
@@ -347,8 +459,8 @@
           <div id="body"></div>
           ${(p.notes||[]).length ? `<div class="notes">${p.notes.map(esc).join("<br>")}</div>` : ""}
         </article>`;
-      if (v) mountBody(document.getElementById("body"), v);
-      else if (!p.variants) mountBody(document.getElementById("body"), { ...p, checks: null });
+      if (v) mountBody(document.getElementById("body"), v, p);
+      else if (!p.variants) mountBody(document.getElementById("body"), { ...p, checks: null }, p);
       document.getElementById("back").onclick = () => { location.hash = ""; };
       const doPrint = () => {
         const old = document.title;
